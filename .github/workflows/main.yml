@@ -1,20 +1,24 @@
-name: Run Docker
+name: Build Docker
 
 on:
   workflow_dispatch:
 
 jobs:
-  run-docker:
+  build-docker:
     runs-on: self-hosted
-
     steps:
       - uses: actions/checkout@v2
-
-      - name: Download docker image
-        run: docker pull henriqueheemann/senai-tdt:latest
-
-      - name: Remove all container
-        run: docker container rm -f $(docker container ps -a -q) || echo "Nenhum container"
-
-      - name: Run container
-        run: docker run -d -p 8080:80 --name webserver henriqueheemann/senai-tdt:latest
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: henriqueheemann/senai-tdt:latest
